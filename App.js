@@ -1,6 +1,49 @@
 import React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {Calendar} from 'react-native-calendars';
+import {CalendarList, LocaleConfig} from 'react-native-calendars';
+
+LocaleConfig.locales.lm = {
+  monthNames: [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ],
+  monthNamesShort: [
+    'Jan.',
+    'Feb.',
+    'Mar.',
+    'Apr.',
+    'May',
+    'Jun.',
+    'Jul.',
+    'Aug.',
+    'Sept.',
+    'Oct.',
+    'Nov.',
+    'Dec.',
+  ],
+  dayNames: [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ],
+  dayNamesShort: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+  today: 'Today',
+};
+LocaleConfig.defaultLocale = 'lm';
 
 const App = () => {
   const [startDate, setStartDate] = React.useState(null);
@@ -27,16 +70,19 @@ const App = () => {
   /*
     If user picked a starting day, find the closest unavailable date to set it as an end of available period to select
   */
-  const checkNextUnavailableDate = (start, disabledDatesArray) => {
-    const date = new Date(start);
-    for (let i = 0; i <= disabledDatesArray.length; i++) {
-      if (date.getTime() < new Date(disabledDatesArray[i]).getTime()) {
-        setNextUnavailableDate(disabledDatesArray[i]);
-        break;
+  const checkNextUnavailableDate = React.useCallback(
+    (start, disabledDatesArray) => {
+      const date = new Date(start);
+      for (let i = 0; i <= disabledDatesArray.length; i++) {
+        if (date.getTime() < new Date(disabledDatesArray[i]).getTime()) {
+          setNextUnavailableDate(disabledDatesArray[i]);
+          break;
+        }
       }
-    }
-    return;
-  };
+      return;
+    },
+    [],
+  );
 
   /*
     Get dates between starting day and ending day
@@ -127,18 +173,35 @@ const App = () => {
       setStartDate(date);
       setSelectedDates(makeDates(date, null));
     },
-    [endDate, startDate, disabledDates, makeDates, clearDates],
+    [
+      endDate,
+      startDate,
+      checkNextUnavailableDate,
+      disabledDates,
+      makeDates,
+      clearDates,
+    ],
   );
 
   return (
     <View style={styles.wrapper}>
-      <Calendar
+      <CalendarList
         current={'2020-03-01'}
         minDate={startDate ? startDate : new Date()}
         maxDate={nextUnavailableDate ? nextUnavailableDate : undefined}
         onDayPress={day => setDates(day.dateString)}
         markedDates={{...disabledDatesObject, ...selectedDates}}
         markingType={'period'}
+        theme={{
+          'stylesheet.calendar.header': {
+            header: {
+              justifyContent: 'flex-start',
+              paddingLeft: 0,
+              paddingRight: 0,
+              marginBottom: 20,
+            },
+          },
+        }}
       />
       <TouchableOpacity onPress={clearDates}>
         <Text>Clear dates</Text>
